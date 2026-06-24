@@ -6,25 +6,26 @@ This project provides a lightweight computer-use CLI for KylinOS V11 desktop UI 
 
 - Real mouse movement and clicks.
 - Real keyboard input.
-- Screen and pointer inspection.
+- Relative/current-pointer input for cross-session verification.
 - Scriptable UI verification support for other local desktop projects.
 
 ## Development Rules
 
 - Keep this project independent from system-repair skills and application repositories.
 - Prefer stable system libraries over custom platform code.
-- Use X11/XTest for real mouse and keyboard simulation in XCB/X11 verification sessions.
+- Use Linux `uinput` for real mouse and keyboard simulation because it goes through the kernel input stack and works beyond X11/Xwayland.
 - Keep the tool small and CLI-first; do not add GUI, browser engines, or heavyweight runtimes.
 - Commands should be deterministic and scriptable so other projects can use the tool in verification workflows.
 - The tool is for development verification only. Do not use it to bypass user consent or operate unrelated user applications.
-- If screenshot support is added later, prefer lightweight X11/system image APIs or existing system screenshot tools before adding heavy dependencies.
+- Screenshot, window inspection, and absolute coordinate targeting are separate capture/compositor capabilities; do not add X11-specific shortcuts as the default design.
+- When another local desktop project needs a missing verification capability, implement and verify the needed command here first instead of weakening that project's verification. Common required commands include relative movement, drag, scrolling, right-click, clicks, keyboard input, and short sleeps.
 
 ## Expected Use
 
 ```bash
-kylinos-v11-desktop-computer-use screen
-kylinos-v11-desktop-computer-use position
-kylinos-v11-desktop-computer-use click <x> <y>
+kylinos-v11-desktop-computer-use move <dx> <dy>
+kylinos-v11-desktop-computer-use click
+kylinos-v11-desktop-computer-use drag <dx> <dy>
 kylinos-v11-desktop-computer-use key Tab
 ```
 
