@@ -21,7 +21,7 @@ void usage()
 {
     std::cerr
         << "Usage:\n"
-        << "  kylinos-v11-desktop-computer-use move <dx> <dy>\n"
+        << "  kylinos-v11-desktop-computer-use move <dx> <dy> [duration-ms]\n"
         << "  kylinos-v11-desktop-computer-use down [button]\n"
         << "  kylinos-v11-desktop-computer-use up [button]\n"
         << "  kylinos-v11-desktop-computer-use click [button]\n"
@@ -448,12 +448,8 @@ private:
     bool created_ = false;
 };
 
-void drag(UinputDevice &device, int dx, int dy, int button, int durationMs)
+void smoothMove(UinputDevice &device, int dx, int dy, int durationMs)
 {
-    std::this_thread::sleep_for(std::chrono::milliseconds(40));
-    device.button(button, true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(80));
-
     const int steps = std::max(16, durationMs / 16);
     const int stepDelay = std::max(8, durationMs / steps);
     int previousX = 0;
@@ -466,7 +462,14 @@ void drag(UinputDevice &device, int dx, int dy, int button, int durationMs)
         previousY = y;
         std::this_thread::sleep_for(std::chrono::milliseconds(stepDelay));
     }
+}
 
+void drag(UinputDevice &device, int dx, int dy, int button, int durationMs)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(40));
+    device.button(button, true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(80));
+    smoothMove(device, dx, dy, durationMs);
     std::this_thread::sleep_for(std::chrono::milliseconds(40));
     device.button(button, false);
 }
@@ -489,8 +492,22 @@ void runScript(UinputDevice &device, int argc, char **argv)
                 usage();
                 std::exit(2);
             }
-            device.move(toInt(argv[index], "dx"), toInt(argv[index + 1], "dy"));
+            const int dx = toInt(argv[index], "dx");
+            const int dy = toInt(argv[index + 1], "dy");
             index += 2;
+            int durationMs = 0;
+            if (index < argc) {
+                const std::string maybeDuration = argv[index];
+                if (!maybeDuration.empty() && maybeDuration.find_first_not_of("0123456789") == std::string::npos) {
+                    durationMs = toInt(argv[index], "duration");
+                    ++index;
+                }
+            }
+            if (durationMs > 0) {
+                smoothMove(device, dx, dy, durationMs);
+            } else {
+                device.move(dx, dy);
+            }
         } else if (command == "down" || command == "up") {
             if (index + 1 > argc) {
                 usage();
@@ -587,11 +604,18 @@ int main(int argc, char **argv)
 
     UinputDevice device;
     if (command == "move") {
-        if (argc != 4) {
+        if (argc != 4 && argc != 5) {
             usage();
             return 2;
         }
-        device.move(toInt(argv[2], "dx"), toInt(argv[3], "dy"));
+        const int dx = toInt(argv[2], "dx");
+        const int dy = toInt(argv[3], "dy");
+        const int durationMs = argc == 5 ? toInt(argv[4], "duration") : 0;
+        if (durationMs > 0) {
+            smoothMove(device, dx, dy, durationMs);
+        } else {
+            device.move(dx, dy);
+        }
         return 0;
     }
     if (command == "down" || command == "up") {

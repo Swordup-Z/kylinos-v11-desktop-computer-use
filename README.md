@@ -19,6 +19,7 @@ cmake --build build
 
 ```bash
 ./build/kylinos-v11-desktop-computer-use move 30 -10
+./build/kylinos-v11-desktop-computer-use move 300 0 1200
 ./build/kylinos-v11-desktop-computer-use down
 ./build/kylinos-v11-desktop-computer-use up
 ./build/kylinos-v11-desktop-computer-use click
@@ -28,7 +29,7 @@ cmake --build build
 ./build/kylinos-v11-desktop-computer-use scroll -3
 ./build/kylinos-v11-desktop-computer-use key Tab
 ./build/kylinos-v11-desktop-computer-use type "hello"
-./build/kylinos-v11-desktop-computer-use script move 30 -10 click 1 key Tab sleep 250
+./build/kylinos-v11-desktop-computer-use script down 1 move 300 0 1200 up 1
 ./build/kylinos-v11-desktop-computer-use sleep 250
 ```
 
@@ -49,7 +50,7 @@ fcitx5-remote -c
 
 ## Demos
 
-Draw a visible five-point star in `gpaint` for screen recording:
+Draw and fill a visible yellow five-point star in `gpaint` for screen recording:
 
 ```bash
 tests/draw-star-demo.sh
