@@ -280,6 +280,7 @@ public:
 
         enable(EV_KEY);
         enable(EV_REL);
+        enableProp(INPUT_PROP_POINTER);
         enableRel(REL_X);
         enableRel(REL_Y);
         enableRel(REL_WHEEL);
@@ -328,20 +329,20 @@ public:
             enableKey(code);
         }
 
-        uinput_user_dev device {};
-        std::snprintf(device.name, UINPUT_MAX_NAME_SIZE, "kylinos computer use");
-        device.id.bustype = BUS_USB;
-        device.id.vendor = 0x1209;
-        device.id.product = 0x2026;
-        device.id.version = 1;
-        if (write(fd_, &device, sizeof(device)) != sizeof(device)) {
-            fail("write uinput device");
+        uinput_setup setup {};
+        std::snprintf(setup.name, UINPUT_MAX_NAME_SIZE, "kylinos computer use");
+        setup.id.bustype = BUS_USB;
+        setup.id.vendor = 0x1209;
+        setup.id.product = 0x2026;
+        setup.id.version = 1;
+        if (ioctl(fd_, UI_DEV_SETUP, &setup) < 0) {
+            fail("setup uinput device");
         }
         if (ioctl(fd_, UI_DEV_CREATE) < 0) {
             fail("create uinput device");
         }
         created_ = true;
-        std::this_thread::sleep_for(std::chrono::milliseconds(120));
+        std::this_thread::sleep_for(std::chrono::milliseconds(350));
     }
 
     ~UinputDevice()
@@ -412,6 +413,13 @@ private:
     {
         if (ioctl(fd_, UI_SET_RELBIT, code) < 0) {
             fail("enable uinput relative axis");
+        }
+    }
+
+    void enableProp(int code)
+    {
+        if (ioctl(fd_, UI_SET_PROPBIT, code) < 0) {
+            fail("enable uinput property");
         }
     }
 
